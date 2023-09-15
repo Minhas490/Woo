@@ -1,0 +1,32 @@
+function enable_free_shipping_for_specific_products($available_shipping_methods, $package) {
+    // Define your specific product IDs
+    $specific_product_ids = array(485, 483, 789); // Replace these with your specific product IDs
+
+    $has_specific_product = false;
+
+    // Loop through the products in the cart
+    foreach ($package['contents'] as $item) {
+        if (in_array($item['product_id'], $specific_product_ids)) {
+            $has_specific_product = true;
+            break;
+        }
+    }
+
+    // If cart has the specific product, enable only free shipping
+    if ($has_specific_product) {
+        foreach ($available_shipping_methods as $method_id => $method) {
+            if ('free_shipping:1' !== $method_id) {
+                unset($available_shipping_methods[$method_id]);
+            }
+        }
+    } else {
+        // If the cart doesn't have a specific product, disable free shipping
+        if (isset($available_shipping_methods['free_shipping:1'])) {
+            unset($available_shipping_methods['free_shipping:1']);
+        }
+    }
+
+    return $available_shipping_methods;
+}
+
+add_filter('woocommerce_package_rates', 'enable_free_shipping_for_specific_products', 10, 2);
