@@ -1,0 +1,33 @@
+add_action('pre_get_posts', 'filter_outofstock_from_shop_except_comingsoon');
+
+function filter_outofstock_from_shop_except_comingsoon($query) {
+    if (!is_admin() && $query->is_main_query() && $query->is_post_type_archive('product')) {
+
+        // Get all out-of-stock products
+        $outofstock_products = new WP_Query(array(
+            'post_type'      => 'product',
+            'fields'         => 'ids',
+            'posts_per_page' => -1,
+            'meta_query'     => array(
+                array(
+                    'key'   => '_stock_status',
+                    'value' => 'outofstock'
+                )
+            ),
+            'tax_query' => array(
+                array(
+                    'taxonomy' => 'product_cat',
+                    'field'    => 'slug',
+                    'terms'    => 'coming-soon',
+                    'operator' => 'NOT IN',
+                ),
+            ),
+        ));
+
+        $exclude_ids = $outofstock_products->posts;
+
+   
+        $query->set('post__not_in', $exclude_ids);
+
+    }
+}
